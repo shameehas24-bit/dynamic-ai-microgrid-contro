@@ -1,20 +1,33 @@
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
-def generate_visuals(history):
-    plt.style.use('ggplot')
+def create_animation(history):
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
     
-    ax1.plot(history['hr'], history['solar'], label='Solar', color='gold')
-    ax1.plot(history['hr'], history['load'], label='Load', color='blue')
-    ax1.set_title('Microgrid Power Balance')
-    ax1.legend()
+    def update(frame):
+        ax1.clear()
+        ax2.clear()
+        
+        # Data up to the current frame
+        h = {k: v[:frame] for k, v in history.items()}
+        
+        # Plot Layer 1 & 3: Energy Environment
+        ax1.plot(h['hr'], h['solar'], label='Solar (kW)', color='gold')
+        ax1.plot(h['hr'], h['load'], label='Load (kW)', color='blue')
+        ax1.set_title("Layer 1: Real-Time Microgrid Environment")
+        ax1.legend(loc='upper left')
+        
+        # Plot Layer 2 & 4: AI Agent Response
+        ax2.fill_between(h['hr'], h['soc'], color='green', alpha=0.3)
+        ax2.plot(h['hr'], h['soc'], label='Battery SOC (%)', color='green')
+        ax2.set_ylim(0, 100)
+        ax2.set_title("Layer 2: AI Agent Adaptive Control")
+        ax2.legend(loc='upper left')
+
+    # Create the animation
+    ani = FuncAnimation(fig, update, frames=len(history['hr']), repeat=False)
     
-    ax2.fill_between(history['hr'], history['soc'], color='green', alpha=0.3)
-    ax2.plot(history['hr'], history['soc'], color='green', label='Battery SOC%')
-    ax2.set_ylim(0, 100)
-    ax2.set_title('AI-Optimized Battery State')
-    ax2.legend()
-    
-    plt.tight_layout()
-    plt.savefig('visual_output.png')
-    print("Visual saved as visual_output.png")
+    # Save as a GIF (This is the "Website" effect)
+    print("Generating live animation...")
+    ani.save('live_dashboard.gif', writer='pillow', fps=5)
+    plt.close()
